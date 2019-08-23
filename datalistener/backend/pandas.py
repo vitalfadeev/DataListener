@@ -113,6 +113,12 @@ def GetFileData( filename ):
     elif filename.endswith('xlsx'):
         df = GetFileDataXLS(filename)
 
+    elif filename.endswith('json'):
+        df = GetFileDataJSON(filename)
+
+    elif filename.endswith('xml'):
+        df = GetFileDataXML(filename)
+
     else:
         raise Exception("Unsuppported")
 
@@ -130,6 +136,17 @@ def GetFileDataCSV(filename):
 
 def GetFileDataXLS(filename):
     df = pandas.read_excel(filename)
+    return df
+
+
+def GetFileDataJSON(filename):
+    df = pandas.read_json(filename)
+    return df
+
+
+def GetFileDataXML(filename):
+    df = pandas.read_html(filename)
+    return df
 
 
 def get_db_connection_mysql(DatabaseName):
@@ -154,7 +171,6 @@ def get_db_connection_mysql(DatabaseName):
 
 def get_db_connection_sqlite(DatabaseName):
     from sqlalchemy import create_engine
-    from sqlalchemy.engine.url import URL
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     BASE_DIR = os.path.dirname(BASE_DIR)

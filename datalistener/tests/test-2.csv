@@ -1,0 +1,28 @@
+OneDate	SomeTagSingle26	OneTime	SomeTagsMultiples	OneDateTime	SomeNumbers5	SomeNumbers26	TagWeighted7	SomeTagSingle10
+10.08.2020	 Djibouti	12:30	white/red;blue	10.05.05 12:50	1	100	Cat=0.5	 Estonia
+11.08.2020	 Dominica	13:30	red;white	11.05.01 12:50	2	101	Felidae=1	 Eswatini
+12.08.2020	 Dominican Republic	14:30	Red, blue	12.05.01 12:50	3	102	Felin=0	 Ethiopia
+13.08.2020	 Ecuador	15:30	Red, blue	13.05.01 12:50	4	103	 T1=1,T4=1	 Faroe Islands (Denmark)
+14.08.2020	 Egypt	16:30	yellow	14.05.01 12:50	5	104	 T1=0.5,T2=1,T3=0	 Fiji
+15.08.2020	 El Salvador	17:30		15.05.01 12:50	1	105	 T1=1,T4=1	 Finland
+16.08.2020	 Equatorial Guinea	18:30		16.05.01 12:50	2	106	 T1=0.5,T2=1,T3=0	 France
+17.08.2020	 Eritrea	19:30	black,green	17.05.01 13:50	3	107	 T1=1 T4=1	 French Polynesia
+18.08.2020	 Estonia	20:30	Blue Red, blue	18.05.01 14:50	4	108	 T1=0.5,T2=1,T3=0	 Gabon
+19.08.2021	 Eswatini	21:30	white	19.05.01 15:50	5	109	 T1=1,T4=1	 Gambia
+20.08.2021	 Ethiopia	22:30	red	20.05.01 16:50	1	110	T1=1,T3=0.25;T4=0.5	 Georgia
+21.08.2021	 Faroe Islands (Denmark)	23:30	Red, blue	21.05.01 17:50	2	111	T1=1;T2=0.25;T3=0.25;T4=0.5	 Estonia
+22.08.2021	 Fiji	00:30	yellow	22.05.01 18:50	3	112	T3=0.25 T4=0.5	 Eswatini
+23.08.2021	 Finland	01:30		23.05.01 19:50	4	113	T1=1;T2=0.25;T3=0.25;T4=0.5	 Ethiopia
+24.08.2021	 France	02:30	black	24.05.01 20:50	5	114	T1=1;T2=0.25;T3=0.25;T4=0.5	 Faroe Islands (Denmark)
+25.08.2021	 French Polynesia	03:30	Blue Red, blue	25.05.01 21:50	1	115	T1=1;T2=0.25;T3=0.25;T4=0.5	 Fiji
+26.08.2021	 Gabon	04:30		26.05.01 22:50	2	116	Cat=0.5,Felidae=1,Felin=0	 Finland
+27.08.2022	 Gambia	05:30		27.05.01 23:50	3	117	Cat=0.5,Felidae=1,Felin=0	 France
+28.08.2022	 Georgia	06:30	black,green	29.05.01 00:50	4	118	 T1=1,T4=1	 French Polynesia
+29.08.2022	 Germany	07:30	Blue Red, blue	29.05.01 12:50	5	119	 T1=0.5,T2=1,T3=0	 Gabon
+30.08.2022	 Ghana	08:30	white	30.05.01 12:50	1	120	 T1=1,T4=1	 Gambia
+31.08.2022	 Gibraltar (UK)	09:30	red	31.05.01 12:50	2	121	 T1=0.5,T2=1,T3=0	 Georgia
+01.09.2022	 Greece	10:30	Red, blue	01.06.01 12:50	3	122	Cat=0.5,Felidae=1,Felin=0	 Estonia
+02.09.2022	 Greenland (Denmark)	11:30	yellow	02.06.01 12:50	4	123	Cat=0.5,Felidae=1,Felin=0	 Eswatini
+03.09.2022	 Grenada	12-30-00 PM		03.06.01 12:50	5	124	Cat=0.5,Felidae=1,Felin=0	 Ethiopia
+04.09.2022	 Guam	13:30	black	04.06.01 12:50	1	125	T1=1;T2=0.25;T3=0.25;T4=0.5	 Faroe Islands (Denmark)
+05.09.2022	 Guatemala	14:30	Blue Red, blue	05.06.10 12:50	2	126	T1=1;T2=0.25;T3=0.25;T4=0.5	 Fiji

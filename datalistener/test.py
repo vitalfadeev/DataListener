@@ -64,7 +64,7 @@ def test_read_csv():
 
 
 def test_read_xls():
-    """ Test download csv
+    """ Test download xls
     """
     print("Read data: ", end="")
     r = requests.get(
@@ -88,7 +88,7 @@ def test_read_xls():
 
 
 def test_read_json():
-    """ Test download csv
+    """ Test download json
     """
     print("Read data: ", end="")
     r = requests.get(
@@ -112,7 +112,7 @@ def test_read_json():
 
 
 def test_read_xml():
-    """ Test download csv
+    """ Test download ml
     """
     print("Read data: ", end="")
     r = requests.get(
