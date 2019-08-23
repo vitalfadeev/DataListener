@@ -1,7 +1,7 @@
 ## About
 Flask app.
 - receive csv/xls/json/xml
-- auth via username/password: ?username=test&oassword=test
+- auth via username/password: ?username=test&password=test
 - sqlite/mysql
 - `pandas`  as backend for reading csv/xls/json/xml: 
 - emission DB table data as csv
