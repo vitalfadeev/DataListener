@@ -20,3 +20,8 @@ see, please `datalistener/settings.py` and `datalistener/my.cnf`
 - POST /store?username=test&password=test&file=<data>
 - GET /read?username=test&password=test&format=csv
 
+#### debugging
+- POST /store-dev?username=test&password=test
+- GET /read-dev?username=test&password=test
+- GET /
+
