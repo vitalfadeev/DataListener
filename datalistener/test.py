@@ -39,7 +39,7 @@ def test_store():
     r.close()
 
 
-def test_read():
+def test_read_csv():
     """ Test download csv
     """
     print("Read data: ", end="")
@@ -63,13 +63,91 @@ def test_read():
     r.close()
 
 
+def test_read_xls():
+    """ Test download csv
+    """
+    print("Read data: ", end="")
+    r = requests.get(
+        'http://localhost:5000/read',
+        params = {
+            'username': 'admin',
+            'password': 'pwd123',
+            'format'  : 'xls',
+        },
+        stream=True)
+
+    if r.status_code == 200:
+        print("[ OK ]")
+        write_file(r)
+
+    else:
+        print("[FAIL]")
+        print("  text:", r.text)
+
+    r.close()
+
+
+def test_read_json():
+    """ Test download csv
+    """
+    print("Read data: ", end="")
+    r = requests.get(
+        'http://localhost:5000/read',
+        params = {
+            'username': 'admin',
+            'password': 'pwd123',
+            'format'  : 'json',
+        },
+        stream=True)
+
+    if r.status_code == 200:
+        print("[ OK ]")
+        write_file(r)
+
+    else:
+        print("[FAIL]")
+        print("  text:", r.text)
+
+    r.close()
+
+
+def test_read_xml():
+    """ Test download csv
+    """
+    print("Read data: ", end="")
+    r = requests.get(
+        'http://localhost:5000/read',
+        params = {
+            'username': 'admin',
+            'password': 'pwd123',
+            'format'  : 'xml',
+        },
+        stream=True)
+
+    if r.status_code == 200:
+        print("[ OK ]")
+        write_file(r)
+
+    else:
+        print("[FAIL]")
+        print("  text:", r.text)
+
+    r.close()
+
+
 def write_file(r):
     """ Handle downloaded file. Save to temporary folder. Name: DataReadFromSql-<RANDOM>.csv
         :param r: Request
         :return:
     """
+    # get file name
+    import re
+    d = r.headers['content-disposition']
+    filename = re.findall("filename=(.+)", d)[0]
+
+    # save file
     import tempfile
-    fd, outfile = tempfile.mkstemp(prefix="DataReadFromSql-", suffix=".csv")
+    fd, outfile = tempfile.mkstemp(prefix="DataReadFromSql-", suffix="-" + filename )
     with open(outfile, 'wb') as f:
         for chunk in r:
             f.write(chunk)
@@ -87,5 +165,8 @@ def test_local():
 
 if __name__ == "__main__":
     test_store()
-    test_read()
+    test_read_csv()
+    test_read_xls()
+    test_read_json()
+    test_read_xml()
 
