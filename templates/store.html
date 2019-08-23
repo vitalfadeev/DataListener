@@ -1,0 +1,30 @@
+<h1>File Upload</h1>
+<form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    Username: {{ form.username }}<br>
+    Password: {{ form.password }}<br>
+    Fie: {{ form.file }}<br>
+    {% for error in form.file.errors %}
+        <span style="color: red;">{{ error }}</span>
+    {% endfor %}
+    {{ form.submit }}
+</form>
+
+{% if warning %}
+WARNING: {{ warning }}
+{% endif %}
+
+{% if file_url %}
+<br>
+Loaded: <a href="{{ file_url }}">file</a><br>
+LastPrimaryKeyWritten: {{ LastPrimaryKeyWritten }}<br>
+dbcols: {{ dbcols }}<br>
+dfcols: {{ dfcols }}<br>
+matches: {{ matches }}<br>
+head:<br>
+<pre>
+{{ head }}
+...
+{{ tail }}
+</pre>
+{% endif %}

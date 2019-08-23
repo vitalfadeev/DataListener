@@ -1,0 +1,25 @@
+<h1>Read</h1>
+<form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    Username: {{ form.username }}<br>
+    Password: {{ form.password }}<br>
+    databasename: {{ form.databasename }}<br>
+    tablename: {{ form.tablename }}<br>
+    exportlines: {{ form.exportlines }}<br>
+    formatoutput: {{ form.formatoutput }}<br>
+
+    {% if form.errors %}
+        <span style="color: red;">{{ form.errors }}</span>
+    {% endif %}
+    {{ form.submit }}
+</form>
+
+{% if warning %}
+WARNING: {{ warning }}
+{% endif %}
+
+{%if data %}
+<pre>
+{{ data }}
+</pre>
+{% endif %}

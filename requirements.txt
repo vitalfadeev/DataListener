@@ -1,0 +1,22 @@
+flask
+Flask-Uploads
+Flask-WTF
+werkzeug
+
+# for read csv, xls, xlsx
+pandas
+
+# for read xls, xlsx
+xlrd
+openpyxl
+xlwt
+
+# for mysql
+mysqlclient
+sqlalchemy
+
+# for ixioo sql queries
+-e git+https://github.com/vitalfadeev/sqlinterface.git#egg=sqlinterface
+
+# for testing
+requests

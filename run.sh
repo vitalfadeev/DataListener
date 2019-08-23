@@ -1,1 +1,3 @@
-env FLASK_APP=hello.py flask run
+#!/usr/bin/env bash
+env FLASK_APP=app.py flask run
+
