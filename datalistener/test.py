@@ -9,6 +9,7 @@
 
 import os
 import requests
+from requests.auth import HTTPBasicAuth
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,10 +21,7 @@ def test_store():
     print("Store data: ", end="")
     r = requests.post(
         'http://localhost:5000/store',
-        data = {
-            'username': 'admin',
-            'password': 'pwd123',
-        },
+        auth=HTTPBasicAuth('admin', 'pwd123'),
         files={
             'file': open(os.path.join(BASE_DIR, 'tests', 'test-2.csv'), 'rb')
         })
@@ -45,9 +43,8 @@ def test_read_csv():
     print("Read data: ", end="")
     r = requests.get(
         'http://localhost:5000/read',
+        auth=HTTPBasicAuth('admin', 'pwd123'),
         params = {
-            'username': 'admin',
-            'password': 'pwd123',
             'format'  : 'csv',
         },
         stream=True)
@@ -69,9 +66,8 @@ def test_read_xls():
     print("Read data: ", end="")
     r = requests.get(
         'http://localhost:5000/read',
+        auth=HTTPBasicAuth('admin', 'pwd123'),
         params = {
-            'username': 'admin',
-            'password': 'pwd123',
             'format'  : 'xls',
         },
         stream=True)
@@ -93,9 +89,8 @@ def test_read_json():
     print("Read data: ", end="")
     r = requests.get(
         'http://localhost:5000/read',
+        auth=HTTPBasicAuth('admin', 'pwd123'),
         params = {
-            'username': 'admin',
-            'password': 'pwd123',
             'format'  : 'json',
         },
         stream=True)
@@ -117,9 +112,8 @@ def test_read_xml():
     print("Read data: ", end="")
     r = requests.get(
         'http://localhost:5000/read',
+        auth=HTTPBasicAuth('admin', 'pwd123'),
         params = {
-            'username': 'admin',
-            'password': 'pwd123',
             'format'  : 'xml',
         },
         stream=True)
