@@ -58,15 +58,15 @@ def store():
 def read():
     """ Read data from DB
         HTTP params:
-            'id'        0    Start ID.
+            'from_id'   0     Start ID.
             'format'    csv   Ouyput format: csv | xls | json | xml
         :return: file
     """
-    id_ = request.args.get("id", None)
-    format = request.args.get("format", FORMAT_CSV)
+    from_id = request.args.get("from_id", None)
+    format  = request.args.get("format", FORMAT_CSV)
 
     # read data from DB to [[],[],]
-    data = ProcessRead(ExportLinesAfterPrimaryKey=id_, FormatOutput=format)
+    data = ProcessRead(ExportLinesAfterPrimaryKey=from_id, FormatOutput=format)
     if format == FORMAT_CSV:
         return Response(
             data,

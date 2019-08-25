@@ -17,11 +17,6 @@ see, please `datalistener/test.py`
 see, please `datalistener/settings.py` and `datalistener/my.cnf`  
 
 ### HTTP usage
-- POST /store?username=test&password=test&file=<data>
-- GET /read?username=test&password=test&format=csv
-
-#### debugging
-- POST /store-dev?username=test&password=test
-- GET /read-dev?username=test&password=test
-- GET /
-
+- POST /store?file=<data>
+- GET /read?format=csv
+- GET /read?format=csv&from_id=10

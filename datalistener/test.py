@@ -1,11 +1,11 @@
 # send
-# http://localhost:5000/store-dev?username=admin&password=pwd123
+# http://localhost:5000/store
 
 # receive
-# http://localhost:5000/read?username=admin&password=pwd123&databasename=Brain01&tablename=TEST&exportlines=5&formatoutput=csv&submit=Read&format=csv
-# http://localhost:5000/read?username=admin&password=pwd123&databasename=Brain01&tablename=TEST&exportlines=5&formatoutput=csv&submit=Read&format=xls
-# http://localhost:5000/read?username=admin&password=pwd123&databasename=Brain01&tablename=TEST&exportlines=5&formatoutput=csv&submit=Read&format=json
-# http://localhost:5000/read?username=admin&password=pwd123&databasename=Brain01&tablename=TEST&exportlines=5&formatoutput=csv&submit=Read&format=xml
+# http://localhost:5000/read?databasename=format=csv
+# http://localhost:5000/read?databasename=format=xls
+# http://localhost:5000/read?databasename=format=json
+# http://localhost:5000/read?databasename=format=xml
 
 import os
 import requests
@@ -147,6 +147,8 @@ def write_file(r):
             f.write(chunk)
     os.close(fd)
 
+    return outfile
+
 
 def test_local():
     """ Test inserting local file to DB
@@ -157,10 +159,44 @@ def test_local():
     ProcessFile(ffname)
 
 
+def test_read_csv_from(from_id):
+    """ Test download csv
+    """
+    print("Read data from:", from_id, " ", end="")
+    r = requests.get(
+        'http://localhost:5000/read',
+        auth=HTTPBasicAuth('admin', 'pwd123'),
+        params = {
+            'from_id' : from_id,
+            'format'  : 'csv',
+        },
+        stream=True)
+
+    if r.status_code == 200:
+        # get file
+        outfile = write_file(r)
+
+        # check ID
+        import pandas
+        df = pandas.read_csv(outfile, sep="\t") # read csv file to DataFrame
+
+        if df.iloc[0]['ID'] == from_id: # check first row, column named 'ID'
+            print("[ OK ]")
+        else:
+            print("[FAIL]")
+
+    else:
+        print("[FAIL]")
+        print("  text:", r.text)
+
+    r.close()
+
+
 if __name__ == "__main__":
     test_store()
     test_read_csv()
     test_read_xls()
     test_read_json()
     test_read_xml()
+    test_read_csv_from(10)
 
