@@ -1,9 +1,6 @@
 import os
 import pandas
-from .formats import FORMAT_CSV, FORMAT_XLS, FORMAT_XLSX, FORMAT_JSON, FORMAT_XML, DMY, MDY
-
-
-DRIVER = 'sqlite'
+from .formats import *
 
 
 def DataStoreInSql( DatabaseName, TableName, ColumNames, DataArrayToWrite, SettingFormatDate=DMY ):
@@ -138,6 +135,7 @@ def to_xml(df, filename=None, mode='w'):
         f.write(res)
 
 
+# add pandas.DataFrame method for save to XML
 pandas.DataFrame.to_xml = to_xml
 
 
@@ -148,16 +146,16 @@ def GetFileData( filename ):
     """
     # read data
     if filename.endswith('csv'):
-        df = GetFileDataCSV(filename)
+        df = pandas.read_csv(filename, sep=None, engine='python')
 
     elif filename.endswith('xls'):
-        df = GetFileDataXLS(filename)
+        df = pandas.read_excel(filename)
 
     elif filename.endswith('xlsx'):
-        df = GetFileDataXLS(filename)
+        df = pandas.read_excel(filename)
 
     elif filename.endswith('json'):
-        df = GetFileDataJSON(filename)
+        df = pandas.read_json(filename)
 
     elif filename.endswith('xml'):
         df = GetFileDataXML(filename)
@@ -165,33 +163,6 @@ def GetFileData( filename ):
     else:
         raise Exception("Unsuppported")
 
-    return df
-
-
-def GetFileDataCSV(filename):
-    """ Read csv file with data
-        :param filename:    "" file name
-        :return:            pandas Dataframe
-    """
-    df = pandas.read_csv(filename, sep=None, engine='python')
-    return df
-
-
-def GetFileDataXLS(filename):
-    """ Read xls/xlsx file with data
-        :param filename:    "" file name
-        :return:            pandas Dataframe
-    """
-    df = pandas.read_excel(filename)
-    return df
-
-
-def GetFileDataJSON(filename):
-    """ Read json file with data
-        :param filename:    "" file name
-        :return:            pandas Dataframe
-    """
-    df = pandas.read_json(filename)
     return df
 
 
@@ -238,42 +209,15 @@ def GetFileDataXML(filename):
     return df
 
 
-def get_db_connection_mysql(DatabaseName):
-    from sqlalchemy import create_engine
-    from sqlalchemy.engine.url import URL
-
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    BASE_DIR = os.path.dirname(BASE_DIR)
-    MY_CNF_PATH = os.path.join(BASE_DIR, 'my.cnf')
-
-    myDB = URL(
-        drivername='mysql',
-        host='localhost',
-        database=DatabaseName,
-        query={'read_default_file': MY_CNF_PATH}
-    )
-    engine = create_engine(name_or_url=myDB)
-    connection = engine.connect()
-
-    return connection
-
-
-def get_db_connection_sqlite(DatabaseName):
-    from sqlalchemy import create_engine
-
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    BASE_DIR = os.path.dirname(BASE_DIR)
-    BASE_DIR = os.path.dirname(BASE_DIR)
-    abspath = os.path.abspath(os.path.join(BASE_DIR, DatabaseName + '.sqlite3'))
-
-    engine = create_engine('sqlite:///{}'.format(abspath))
-    connection = engine.connect()
-
-    return connection
-
-
 def get_db_connection(DatabaseName):
-    if DRIVER == 'sqlite':
-        return get_db_connection_sqlite(DatabaseName)
-    else:
-        return get_db_connection_mysql(DatabaseName)
+    """ Return DB connection for insert data to SQlite/MySQL. default: sqlite
+        :param DatabaseName: ""
+        :return: SqlAlchemy connection object
+    """
+    from sqlalchemy import create_engine
+    from .. import settings
+
+    # connect
+    engine = create_engine(settings.DB_CONNECTION_STRING)
+    connection = engine.connect()
+    return connection
