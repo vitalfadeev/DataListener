@@ -3,6 +3,9 @@ Flask-Uploads
 Flask-WTF
 werkzeug
 
+# for user auth
+Flask-BasicAuth
+
 # for read csv, xls, xlsx
 pandas
 

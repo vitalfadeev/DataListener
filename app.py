@@ -1,14 +1,11 @@
 import os
-from functools import wraps
 from flask import Flask, flash, request, redirect, url_for, render_template, Response, abort
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import SubmitField, StringField, validators
+from flask_basicauth import BasicAuth
 from datalistener import settings
-#from datalistener.backend.pandas import DataReadFromSql, DataStoreInSql, GetFileData
-#from datalistener.backend.formats import FORMAT_CSV, FORMAT_XLS, FORMAT_JSON, FORMAT_XML, DMY, MDY
-
 from datalistener import DataReadFromSql, DataStoreInSql, GetFileData
 from datalistener import FORMAT_CSV, FORMAT_XLS, FORMAT_JSON, FORMAT_XML, DMY, MDY
 
@@ -16,73 +13,51 @@ from datalistener import FORMAT_CSV, FORMAT_XLS, FORMAT_JSON, FORMAT_XML, DMY, M
 # inti Flask
 app = Flask(__name__)
 
-# configure flask
-app.config['SECRET_KEY'] = 'I have a dream'
-app.config['UPLOADED_FILES_DEST'] = settings.UPLOAD_FOLDER
+# configure auth
+app.config['BASIC_AUTH_USERNAME'] = settings.USERNAME
+app.config['BASIC_AUTH_PASSWORD'] = settings.PASSWORD
+basic_auth = BasicAuth(app)
 
-# configure flask uploader
-files = UploadSet('files', settings.ALLOWED_EXTENSIONS)
-configure_uploads(app, files)
-patch_request_class(app)  # set maximum file size, default is 16MB
+# configure flask for file upload
+app.config['SECRET_KEY'] = 'I have a dream'                 # secret key
+app.config['UPLOADED_FILES_DEST'] = settings.UPLOAD_FOLDER  # fullpath to folder for store uploaded files
 
-
-# decorator for check login/password
-def login_required(func):
-    """ Decorator for check user/password
-    """
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        # ?username=test&password=test
-        if request.method in ['POST', 'PUT']:
-            username = request.values.get('username', None)
-            password = request.values.get('password', None)
-        else:
-            username = request.args.get('username', None)
-            password = request.args.get('password', None)
-
-        # check username & password
-        if username == settings.USERNAME and password == settings.PASSWORD:
-            return func(*args, **kwargs) # OK
-        else:
-            abort(403) # access denied
-
-    return wrapper
+# configure file uploader
+files = UploadSet('files', settings.ALLOWED_EXTENSIONS)     # setup file uploader
+configure_uploads(app, files)                               # configure Flask app for file upload handling
+patch_request_class(app, size=64 * 1024 * 1024)             # set maximum file size to 64MB, default is 16MB.
 
 
+#####################################################################################################################
+# Views
+#####################################################################################################################
 @app.route('/store', methods=['GET', 'POST', 'PUT'])
-@login_required
+@basic_auth.required
 def store():
     """ Store data into DB
         HTTP params:
-            'username'  ""
-            'password'  ""
-            'file'      b""
+            'file'      b""   supported formats: csv, xls, xlsx, json, xml
         :return: ""  Last id
     """
     # save file from HTTP data to local storage
-    file = request.files['file']
-    filename = files.save(file)
+    file = request.files['file']    # get file data
+    filename = files.save(file)     # save file data
 
     # get full file name. ex: /full/path/to/file
     ffname = os.path.join(settings.UPLOAD_FOLDER, filename)
 
-    # parse file & insert into DB
-    (lastid, head, tail, dbcols, dfcols, matches) = ProcessFile( ffname )
+    # parse file & insert into DB. get last inserted ID
+    lastid = ProcessFile( ffname )
 
-    if len(matches) != len(dbcols):
-        warning = "Not all columns inserted. Expected: {}, Inserted: {}".format(dbcols, matches)
-        return warning
-    else:
-        return Response(repr(lastid))
+    # return last inserted ID
+    return Response(repr(lastid))
 
 
 @app.route('/read', methods=['GET'])
-@login_required
+@basic_auth.required
 def read():
     """ Read data from DB
         HTTP params:
-            'username'  ""
-            'password'  ""
             'id'        0    Start ID.
             'format'    csv   Ouyput format: csv | xls | json | xml
         :return: file
@@ -90,6 +65,7 @@ def read():
     id_ = request.args.get("id", None)
     format = request.args.get("format", FORMAT_CSV)
 
+    # read data from DB to [[],[],]
     data = ProcessRead(ExportLinesAfterPrimaryKey=id_, FormatOutput=format)
     if format == FORMAT_CSV:
         return Response(
@@ -119,155 +95,73 @@ def read():
         raise Exception("unsupported")
 
 
-###################################### devel forms ######################################
-# dev test function
-@app.route("/")
-def hello():
-    return "Data listener ready!"
-
-
-# upload form
-class UploadForm(FlaskForm):
-    username = StringField('Username', [validators.required(), validators.length(max=20)])
-    password = StringField('Password', [validators.required(), validators.length(max=20)])
-    file = FileField(validators=[FileAllowed(files, ", ".join(settings.ALLOWED_EXTENSIONS) + ' only'), FileRequired(u'File was empty!')])
-    submit = SubmitField('Upload')
-
-
-# upload form
-class ReadForm(FlaskForm):
-    username     = StringField('Username', [validators.required(), validators.length(max=20)])
-    password     = StringField('Password', [validators.required(), validators.length(max=20)])
-    databasename = StringField('DatabaseName', [validators.required(), validators.length(max=20)], default=settings.BrainID)
-    tablename    = StringField('TableName', [validators.required(), validators.length(max=20)], default=settings.TABLENAME)
-    exportlines  = StringField('ExportLines', [validators.required(), validators.length(max=20)], default="5")
-    formatoutput = StringField('FormatOutput', [validators.required(), validators.length(max=20)], default="csv")
-    submit = SubmitField('Read')
-
-
-@app.route('/store-dev', methods=['GET', 'POST', 'PUT'])
-@login_required
-def store_dev():
-    """ Store data into DB
-        :return: ""  Last row id
-    """
-    form = UploadForm()
-    if form.validate_on_submit():
-        # save file from HTTP data to local storage
-        filename = files.save(form.file.data)
-        file_url = files.url(filename)
-
-        # get full file name. ex: /full/path/to/file
-        ffname = os.path.join(settings.UPLOAD_FOLDER, filename)
-
-        # parse file & insert into DB
-        (lastid, head, tail, dbcols, dfcols, matches) = ProcessFile( ffname )
-
-        if len(matches) != len(dbcols):
-            warning = "Not all columns inserted. Expected: {}, Inserted: {}".format(dbcols, matches)
-        else:
-            warning = None
-
-    else:
-        form.username.default = request.args.get('username', '')
-        form.password.default = request.args.get('password', '')
-        form.process()
-        file_url = None
-        lastid = None
-        head = None
-        tail = None
-        dbcols = None
-        dfcols = None
-        matches = None
-        warning = None
-
-    return render_template('store.html',
-        form=form,
-        file_url=file_url,
-        LastPrimaryKeyWritten=lastid,
-        head=head,
-        tail=tail,
-        dbcols=dbcols,
-        dfcols=dfcols,
-        matches=matches,
-        warning=warning
-        )
-
-
-@app.route('/read-dev', methods=['GET', 'POST'])
-@login_required
-def read_dev():
-    """ Read data from DB
-        :return: []
-    """
-    form = ReadForm()
-    if form.validate_on_submit():
-        warning = None
-        data = ProcessRead()
-        return Response(
-            data,
-            mimetype="text/csv",
-            headers={"Content-disposition":"attachment; filename={}.csv".format(settings.TABLENAME)})
-    else:
-        warning = None
-        data = ""
-
-    return render_template('read.html',
-        form=form,
-        warning=warning,
-        data=data
-        )
-
-
-#######################################################################################
+#####################################################################################################################
+# Store helper
+#####################################################################################################################
 def ProcessFile(ffname, SettingFormatDate=DMY):
-    """ Read uploaded file, parse, insert into DB
+    """ Read uploaded file, parse, insert into DB. Ir wrapper around main importer function.
         :param ffname:
         :return:
     """
-    # read file (csv, xls, json, xml)
+    # read file (csv, xls, json, xml). into pandas.DataFrame
     df = GetFileData(ffname)
 
-    # get column names common in file and in table
+    # get column names common.
+    # 1. get table columns
+    # 2. get file columns
+    # 3. find same
     dbcols = list(settings.ColumnType.keys())
     dfcols = list(df.columns)
-    RequiredColumns = GetCommonColumns(dbcols, dfcols)
+    SameColumns = GetSameColumns(dbcols, dfcols)
 
-    if RequiredColumns:
+    if SameColumns:
         # reduce data size: keep only required columns
-        RequiredData = df[RequiredColumns]
+        DataArrayToWrite = df[SameColumns]
 
         # remove NaN from data
-        RequiredData = RequiredData.dropna()
+        DataArrayToWrite = DataArrayToWrite.dropna()
 
         # insert into DB
         DatabaseName     = settings.BrainID
         TableName        = settings.TABLENAME
-        ColumNames       = RequiredColumns
-        DataArrayToWrite = RequiredData.values.tolist()
+        ColumNames       = SameColumns
 
+        # main function for store data to DB
         lastid = DataStoreInSql(DatabaseName, TableName, ColumNames, DataArrayToWrite, SettingFormatDate=DMY)
 
-        # head
-        head = RequiredData.head()
-        tail = RequiredData.tail()
-
-        return (lastid, head, tail, dbcols, dfcols, ColumNames)
+        return lastid
 
     else:
-        abort(500, "No common columns")
+        # warning if no same columns
+        warning = "Not all columns inserted. Expected: {}, Inserted: {}".format(dbcols, SameColumns)
+        abort(500, warning)
 
 
+#####################################################################################################################
+# Read helper
+#####################################################################################################################
 def ProcessRead(ExportLinesAfterPrimaryKey=None, FormatOutput=FORMAT_CSV, SettingFormatDate=DMY):
+    """ Wrapper around main exporter function
+        :param ExportLinesAfterPrimaryKey:
+        :param FormatOutput:
+        :param SettingFormatDate:
+        :return:
+    """
     DatabaseName      = settings.BrainID
     TableName         = settings.TABLENAME
 
+    # main function for read from DB & return to user as file
     DataArrayExported = DataReadFromSql( DatabaseName, TableName, ExportLinesAfterPrimaryKey, FormatOutput )
 
     return DataArrayExported
 
 
-def GetCommonColumns(db_cols, file_cols):
+def GetSameColumns(db_cols, file_cols):
+    """ Return names from first list if matched in second list
+        :param db_cols:     [""]
+        :param file_cols:   [""]
+        :return:            [""] Same columns. ex: [a b c] & [a b d] = [a b]
+    """
     common = set(db_cols) & set(file_cols)
     return list(common)
 

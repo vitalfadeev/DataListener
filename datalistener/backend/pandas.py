@@ -103,6 +103,10 @@ pandas.DataFrame.to_xml = to_xml
 
 
 def GetFileData( filename ):
+    """ Read file into pandas.DataFrame
+        :param filename: ""
+        :return:         pandas.DataFrame
+    """
     # read data
     if filename.endswith('csv'):
         df = GetFileDataCSV(filename)
