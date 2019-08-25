@@ -14,10 +14,11 @@ def DataStoreInSql( DatabaseName, TableName, ColumNames, DataArrayToWrite, Setti
     # dataframe
     df = pandas.DataFrame(DataArrayToWrite, columns=ColumNames)
 
-    # insert into DB
+    # get connection
     connection = get_db_connection( DatabaseName )
 
-    df.to_sql(TableName, connection, if_exists='replace', method='multi', index_label='ID')
+    # insert into DB. if table not exists - create, if exists - append
+    df.to_sql(TableName, connection, if_exists='append', method='multi', index_label='ID')
 
     # last id
     result = connection.execute("SELECT max(id) FROM `{}`;".format(TableName))
@@ -87,7 +88,7 @@ def DataReadFromSql( DatabaseName, TableName, ExportLinesAfterPrimaryKey=None, F
             os.remove(xlsx_file)
 
     elif FormatOutput == FORMAT_JSON:
-        DataArrayExported = df.to_json()
+        DataArrayExported = df.to_json(orient='records')
 
     elif FormatOutput == FORMAT_XML:
         DataArrayExported = df.to_xml()
