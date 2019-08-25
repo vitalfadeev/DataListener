@@ -1,6 +1,6 @@
 import os
 import pandas
-from .formats import FORMAT_CSV, FORMAT_XLS, FORMAT_JSON, FORMAT_XML, DMY, MDY
+from .formats import FORMAT_CSV, FORMAT_XLS, FORMAT_XLSX, FORMAT_JSON, FORMAT_XML, DMY, MDY
 
 
 DRIVER = 'sqlite'
@@ -71,6 +71,24 @@ def DataReadFromSql( DatabaseName, TableName, ExportLinesAfterPrimaryKey=None, F
         if os.path.isfile(xls_file):
             os.remove(xls_file)
 
+    elif FormatOutput == FORMAT_XLSX:
+        import tempfile
+
+        fd, xlsx_file = tempfile.mkstemp(prefix="DataReadFromSql-", suffix=".xlsx")
+
+        df.to_excel(xlsx_file)
+
+        # use a context manager to open the file at that path and close it again
+        with open(xlsx_file, 'rb') as f:
+            DataArrayExported = f.read()
+
+        # close the file descriptor
+        os.close(fd)
+
+        # remove temp file
+        if os.path.isfile(xlsx_file):
+            os.remove(xlsx_file)
+
     elif FormatOutput == FORMAT_JSON:
         DataArrayExported = df.to_json()
 
@@ -85,17 +103,38 @@ def DataReadFromSql( DatabaseName, TableName, ExportLinesAfterPrimaryKey=None, F
 
 ### helpers ###
 def to_xml(df, filename=None, mode='w'):
+    """ Save DataFrame to XML. If file == None return string.
+        :param df:
+        :param filename:
+        :param mode:
+        :return: ""
+        Note: XML format
+            <table>
+                <tr>
+                    <Col1>...</Col1> <Col2>...</Col2>
+                </tr>
+            </table>
+    """
     def row_to_xml(row):
-        xml = ['<item>']
+        xml = ['<tr>']
         for i, col_name in enumerate(row.index):
-            xml.append('  <field name="{0}">{1}</field>'.format(col_name, row.iloc[i]))
-        xml.append('</item>')
+            xml.append('  <{0}>{1}</{2}>'.format(col_name, row.iloc[i], col_name))
+        xml.append('</tr>')
         return '\n'.join(xml)
-    res = '\n'.join(df.apply(row_to_xml, axis=1))
 
+    # XML buffer
+    res = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    res += "<table>\n"
+    res += '\n'.join(df.apply(row_to_xml, axis=1))
+    res += "\n"
+    res += "</table>"
+
+    # if file not defined then return string
     if filename is None:
         return res
-    with open(filename, mode) as f:
+
+    # save to file
+    with open(filename, mode, encoding="UTF-8") as f:
         f.write(res)
 
 
@@ -139,17 +178,63 @@ def GetFileDataCSV(filename):
 
 
 def GetFileDataXLS(filename):
+    """ Read xls/xlsx file with data
+        :param filename:    "" file name
+        :return:            pandas Dataframe
+    """
     df = pandas.read_excel(filename)
     return df
 
 
 def GetFileDataJSON(filename):
+    """ Read json file with data
+        :param filename:    "" file name
+        :return:            pandas Dataframe
+    """
     df = pandas.read_json(filename)
     return df
 
 
 def GetFileDataXML(filename):
-    df = pandas.read_html(filename)
+    """ Read xml file with data
+        :param filename:    "" file name
+        :return:            pandas Dataframe
+    """
+    import xml.etree.ElementTree as ET
+    import pandas as pd
+
+    class XML2DataFrame:
+        def __init__(self, xml_data):
+            self.root = ET.XML(xml_data)
+
+        def parse_root(self, root):
+            return [self.parse_element(child) for child in iter(root)]
+
+        def parse_element(self, element, parsed=None):
+            if parsed is None:
+                parsed = dict()
+            for key in element.keys():
+                parsed[key] = element.attrib.get(key)
+            if element.text:
+                parsed[element.tag] = element.text
+            for child in list(element):
+                self.parse_element(child, parsed)
+            return parsed
+
+        def process_data(self):
+            structure_data = self.parse_root(self.root)
+            return pd.DataFrame(structure_data)
+
+    # read XMl to memory
+    with open(filename, encoding="UTF-8") as f:
+        xml_data = f.read()
+
+    # parse text to XML
+    xml2df = XML2DataFrame(xml_data)
+
+    # parse XMl to pandas.DataFrame
+    df = xml2df.process_data()
+
     return df
 
 

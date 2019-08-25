@@ -7,7 +7,7 @@ from wtforms import SubmitField, StringField, validators
 from flask_basicauth import BasicAuth
 from datalistener import settings
 from datalistener import DataReadFromSql, DataStoreInSql, GetFileData
-from datalistener import FORMAT_CSV, FORMAT_XLS, FORMAT_JSON, FORMAT_XML, DMY, MDY
+from datalistener import FORMAT_CSV, FORMAT_XLS, FORMAT_XLSX, FORMAT_JSON, FORMAT_XML, DMY, MDY
 
 
 # inti Flask
@@ -78,6 +78,12 @@ def read():
             data,
             mimetype="application/xls",
             headers={"Content-disposition":"attachment; filename={}.xls".format(settings.TABLENAME)})
+
+    elif format == FORMAT_XLSX:
+        return Response(
+            data,
+            mimetype="application/xlsx",
+            headers={"Content-disposition":"attachment; filename={}.xlsx".format(settings.TABLENAME)})
 
     elif format == FORMAT_JSON:
         return Response(

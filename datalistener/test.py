@@ -6,6 +6,7 @@
 # http://localhost:5000/read?databasename=format=xls
 # http://localhost:5000/read?databasename=format=json
 # http://localhost:5000/read?databasename=format=xml
+# http://localhost:5000/read?databasename=format=csv&from_id=10
 
 import os
 import requests
@@ -15,15 +16,18 @@ from requests.auth import HTTPBasicAuth
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def test_store():
+def test_store(format):
     """ Test upload csv
     """
-    print("Store data: ", end="")
+    print("test_store({}) ".format(format), end="")
     r = requests.post(
         'http://localhost:5000/store',
         auth=HTTPBasicAuth('admin', 'pwd123'),
         files={
-            'file': open(os.path.join(BASE_DIR, 'tests', 'test-2.csv'), 'rb')
+            'file': open(os.path.join(
+                BASE_DIR, 'tests', 'test-2.{}'.format(format)),
+                'rb'
+            )
         })
 
     if r.status_code == 200:
@@ -37,15 +41,15 @@ def test_store():
     r.close()
 
 
-def test_read_csv():
+def test_read(format):
     """ Test download csv
     """
-    print("Read data: ", end="")
+    print("test_read({}): ".format(format), end="")
     r = requests.get(
         'http://localhost:5000/read',
         auth=HTTPBasicAuth('admin', 'pwd123'),
         params = {
-            'format'  : 'csv',
+            'format'  : format,
         },
         stream=True)
 
@@ -59,74 +63,6 @@ def test_read_csv():
 
     r.close()
 
-
-def test_read_xls():
-    """ Test download xls
-    """
-    print("Read data: ", end="")
-    r = requests.get(
-        'http://localhost:5000/read',
-        auth=HTTPBasicAuth('admin', 'pwd123'),
-        params = {
-            'format'  : 'xls',
-        },
-        stream=True)
-
-    if r.status_code == 200:
-        print("[ OK ]")
-        write_file(r)
-
-    else:
-        print("[FAIL]")
-        print("  text:", r.text)
-
-    r.close()
-
-
-def test_read_json():
-    """ Test download json
-    """
-    print("Read data: ", end="")
-    r = requests.get(
-        'http://localhost:5000/read',
-        auth=HTTPBasicAuth('admin', 'pwd123'),
-        params = {
-            'format'  : 'json',
-        },
-        stream=True)
-
-    if r.status_code == 200:
-        print("[ OK ]")
-        write_file(r)
-
-    else:
-        print("[FAIL]")
-        print("  text:", r.text)
-
-    r.close()
-
-
-def test_read_xml():
-    """ Test download ml
-    """
-    print("Read data: ", end="")
-    r = requests.get(
-        'http://localhost:5000/read',
-        auth=HTTPBasicAuth('admin', 'pwd123'),
-        params = {
-            'format'  : 'xml',
-        },
-        stream=True)
-
-    if r.status_code == 200:
-        print("[ OK ]")
-        write_file(r)
-
-    else:
-        print("[FAIL]")
-        print("  text:", r.text)
-
-    r.close()
 
 
 def write_file(r):
@@ -193,10 +129,17 @@ def test_read_csv_from(from_id):
 
 
 if __name__ == "__main__":
-    test_store()
-    test_read_csv()
-    test_read_xls()
-    test_read_json()
-    test_read_xml()
+    test_store('csv')
+    test_store('xls')
+    test_store('xlsx')
+    test_store('json')
+    test_store('xml')
+
+    test_read('csv')
+    test_read('xls')
+    test_read('xlsx')
+    test_read('json')
+    test_read('xml')
+
     test_read_csv_from(10)
 
