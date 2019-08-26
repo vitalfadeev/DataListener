@@ -16,6 +16,19 @@ from requests.auth import HTTPBasicAuth
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
+def create_test_table():
+    from datalistener import settings
+    from sqlinterface import SQLInterface
+
+    db = SQLInterface(my_cnf_path=os.path.join(BASE_DIR, 'my.cnf'))
+    db.SqlDropDatabase(settings.BrainID)
+    db.SqlCreateDatabase(settings.BrainID)
+    db.UseDatabase(settings.BrainID)
+    stypes = [ "{}:{}".format(cname, ctype) for (cname, ctype) in settings.ColumnType.items() ]
+    db.SqlCreateTable(settings.TABLENAME, stypes)
+
+
+
 def test_store(format):
     """ Test upload csv
     """
@@ -161,6 +174,8 @@ def test_read_csv_from(from_id):
 
 
 if __name__ == "__main__":
+    create_test_table()
+
     test_store('csv')
     test_store('xls')
     test_store('xlsx')
