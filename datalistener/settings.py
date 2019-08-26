@@ -17,6 +17,14 @@ DB_CONNECTION_STRING = 'mysql://testuser:testpassword@localhost/{}'.format(Brain
 ALLOWED_EXTENSIONS  = {'json', 'csv', 'xls', 'xlsx', 'xml'}
 
 # DB table columns. 'ID' - PRIMARY KEY
+# available types
+# "NUMERICAL",
+# "DATE",
+# "DATETIME",
+# "TIME",
+# "TAGS",     # TEXT
+# "BOOLEAN",  # INT
+# "OPTIONS",  # TEXT
 ColumnType = {
     "SomeNumbers5"      : "NUMERIC",
     "OneDate"           : "DATETIME",
@@ -25,15 +33,3 @@ ColumnType = {
 
 ColumnsNameInput  = ["SomeNumbers5", "OneDate"]
 ColumnsNameOutput = ["SomeTagSingle26"]
-
-# available types
-TYPES = [
-    "NUMERICAL",
-    "DATE",
-    "DATETIME",
-    "TIME",
-    "TAGS",     # TEXT
-    "BOOLEAN",  # NUMERICAL,
-    "OPTIONS",  # TEXT
-]
-
