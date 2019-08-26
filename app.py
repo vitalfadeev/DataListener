@@ -1,9 +1,6 @@
 import os
 from flask import Flask, flash, request, redirect, url_for, render_template, Response, abort
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
-from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired, FileAllowed
-from wtforms import SubmitField, StringField, validators
 from flask_basicauth import BasicAuth
 from datalistener import settings
 from datalistener import DataReadFromSql, DataStoreInSql, GetFileData
@@ -31,12 +28,13 @@ patch_request_class(app, size=64 * 1024 * 1024)             # set maximum file s
 #####################################################################################################################
 # Views
 #####################################################################################################################
-@app.route('/store', methods=['GET', 'POST', 'PUT'])
+@app.route('/store', methods=['GET', 'POST'])
 @basic_auth.required
 def store():
     """ Store data into DB
         HTTP params:
             'file'      b""   supported formats: csv, xls, xlsx, json, xml
+            or ?col1=value1&col2=value2 for HTTP GET/POST usage without file uploading
         :return: ""  Last id
     """
     lastid = None
@@ -95,11 +93,11 @@ def store():
         if SameColumns:
             import pandas
             # insert into DB
-            DatabaseName     = settings.BrainID                                         # DB name
-            TableName        = settings.TABLENAME                                       # DB table name
-            ColumNames       = SameColumns                                              # column names
+            DatabaseName     = settings.BrainID                                           # DB name
+            TableName        = settings.TABLENAME                                         # DB table name
+            ColumNames       = SameColumns                                                # column names
             data             = [v for c,v in request.values.items() if c in SameColumns ] # one row
-            DataArrayToWrite = [data]                                                   # table of one row
+            DataArrayToWrite = [data]                                                     # table of one row
 
             # main function for store data to DB
             lastid = DataStoreInSql(DatabaseName, TableName, ColumNames, DataArrayToWrite, SettingFormatDate=DMY)
@@ -108,13 +106,9 @@ def store():
             # No same columns - [ warning ]
             abort(400, "No same columns")
 
-    elif request.method == 'PUT' and len(request.values) > 0:
-        # HTTP PUT sended
-        format = 'HTTP-PUT'
-        lastid = 0
-
     else:
-        abort(400, "Unsupported")
+        # unsupported HTTP method
+        abort(400, "upsupported http method. expect GET or POST")
 
     # return last inserted ID
     return Response(repr(lastid))

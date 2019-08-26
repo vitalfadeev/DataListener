@@ -213,6 +213,35 @@ def test_read_csv_from(from_id):
     r.close()
 
 
+def test_store_unicode():
+    # тест-测试
+    """ Test upload csv
+    """
+    print("test_store_unicode()", end="")
+
+    # make request
+    r = requests.post(
+        'http://localhost:5000/store',          # Flask url
+        auth=HTTPBasicAuth('admin', 'pwd123'),  # http basic auth username/password
+        files={                                 # file to upload
+            'file': open(os.path.join(
+                BASE_DIR, 'tests', 'test-unicode.csv'),
+                'rb'
+            )
+        })
+
+    # check response
+    if r.status_code == 200:                    # 200 - OK
+        print("[ OK ]")
+        print("  last id:", r.text)
+    else:
+        print("[FAIL]")
+        print("  code:", r.status_code)
+        print("  text:", r.text)
+
+    r.close()
+
+
 if __name__ == "__main__":
     # create TEST table
     create_test_table()
@@ -244,3 +273,7 @@ if __name__ == "__main__":
     # test read data from ID = 10
     test_read_csv_from(10)
 
+    # test unicode
+    # тест-测试
+    test_store_unicode()
+    test_read('csv')

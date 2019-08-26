@@ -222,4 +222,18 @@ def get_db_connection(DatabaseName):
     # connect
     engine = create_engine(settings.DB_CONNECTION_STRING)
     connection = engine.connect()
+
+    # setup UTF-8 support
+    setup_utf8_support(connection)
+
     return connection
+
+
+def setup_utf8_support(dbc):
+    """ Setup UTF-8 support
+    :param dbc DBConnection
+    """
+    #dbc.set_character_set('utf8')
+    dbc.execute('SET NAMES utf8;')
+    dbc.execute('SET CHARACTER SET utf8;')
+    dbc.execute('SET character_set_connection=utf8;')
