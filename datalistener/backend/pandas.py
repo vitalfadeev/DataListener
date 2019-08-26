@@ -156,7 +156,7 @@ def GetFileData( filename ):
         df = pandas.read_excel(filename)
 
     elif filename.endswith('json'):
-        df = pandas.read_json(filename)
+        df = pandas.read_json(filename, orient='records')
 
     elif filename.endswith('xml'):
         df = GetFileDataXML(filename)
