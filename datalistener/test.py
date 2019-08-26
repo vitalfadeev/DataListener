@@ -214,27 +214,33 @@ def test_read_csv_from(from_id):
 
 
 if __name__ == "__main__":
+    # create TEST table
     create_test_table()
 
+    # test store data
     test_store('csv')
     test_store('xls')
     test_store('xlsx')
     test_store('json')
     test_store('xml')
 
+    # test store via HTTP GET
     test_store_http_get()
     test_store_http_get()
     test_store_http_get()
 
+    # test store via HTTP POST
     test_store_http_post()
     test_store_http_post()
     test_store_http_post()
 
+    # test read data
     test_read('csv')
     test_read('xls')
     test_read('xlsx')
     test_read('json')
     test_read('xml')
 
+    # test read data from ID = 10
     test_read_csv_from(10)
 
