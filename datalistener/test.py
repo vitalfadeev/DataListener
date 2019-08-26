@@ -23,10 +23,18 @@ def create_test_table():
     from datalistener import settings
     from sqlinterface import SQLInterface
 
+    # init sqli interface
     db = SQLInterface(settings.DB_CONNECTION_STRING)
+
+    # create database
     db.SqlDropDatabase(settings.BrainID)
     db.SqlCreateDatabase(settings.BrainID)
     db.UseDatabase(settings.BrainID)
+
+    # create table
+    # use types from settings. add ID as primary key
+    ctypes = settings.ColumnType
+    ctypes['ID'] = "PRIMARYKEYAUTO"
     stypes = [ "{}:{}".format(cname, ctype) for (cname, ctype) in settings.ColumnType.items() ]
     db.SqlCreateTable(settings.TABLENAME, stypes)
 

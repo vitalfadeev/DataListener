@@ -1,14 +1,9 @@
 import os
-from datalistener import settings
-from sqlinterface import SQLInterface
-from .formats import FORMAT_CSV, FORMAT_XLS, FORMAT_JSON, FORMAT_XML, DMY, MDY
+import pandas
+from .formats import *
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MY_CNF_PATH = os.path.join(BASE_DIR, 'my.cnf')
-
-
-def DataStoreInSql( DatabaseName, TableName, ColumNames, DataArrayToWrite ):
+def DataStoreInSql( DatabaseName, TableName, ColumNames, DataArrayToWrite, SettingFormatDate=DMY ):
     """ Insert data into DB
         :param DatabaseName:     ""
         :param TableName:        ""
@@ -16,21 +11,24 @@ def DataStoreInSql( DatabaseName, TableName, ColumNames, DataArrayToWrite ):
         :param DataArrayToWrite: [[],[],]
         :return:
     """
-    # insert into DB
+    # dataframe
+    df = pandas.DataFrame(DataArrayToWrite, columns=ColumNames)
+
+    # get connection
+    connection = get_db_connection( DatabaseName )
+
+    # insert into DB. if table not exists - create, if exists - append
     from sqlinterface import SQLInterface
-
-    # prepare database and table
-    db = SQLInterface(my_cnf_path=MY_CNF_PATH)
-    db.SqlDropDatabase(DatabaseName)
-    db.SqlCreateDatabase(DatabaseName)
-    db.UseDatabase(DatabaseName)
-    db.SqlCreateTable(TableName, settings.ColumnType)
-
-    # insert
-    c = db.SqlExecuteManyInsert(TableName, ColumNames, DataArrayToWrite)
+    from datalistener import settings
+    db = SQLInterface(connection_string=settings.DB_CONNECTION_STRING)
+    db.SqlExecuteManyInsert(TableName, ColumNames, DataArrayToWrite.values.tolist())
 
     # last id
-    LastPrimaryKeyWritten = c.lastrowid + c.rowcount - 1
+    result = connection.execute("SELECT max(id) FROM `{}`;".format(TableName))
+    row = result.fetchone()
+    LastPrimaryKeyWritten = row[0]
+
+    connection.close()
 
     return LastPrimaryKeyWritten
 
@@ -43,46 +41,60 @@ def DataReadFromSql( DatabaseName, TableName, ExportLinesAfterPrimaryKey=None, F
     :param FormatOutput:                ""
     :return:                            b""
     """
-    # prepare database and table
-    db = SQLInterface()
-    db.UseDatabase(DatabaseName)
+    #
+    connection = get_db_connection( DatabaseName )
 
-    # read
-    columns = None
-
+    #
+    sql = "SELECT * FROM `{}`".format(TableName)
     if ExportLinesAfterPrimaryKey:
-        sql_where = " id >= {}".format( ExportLinesAfterPrimaryKey )
-    else:
-        sql_where = None
+        sql = sql + " WHERE id >= {}".format( ExportLinesAfterPrimaryKey )
 
-    datas = db.SqlExecuteManyRead( TableName, columns, sql_where )
+    df = pandas.read_sql_query( sql, connection, index_col="ID" )
 
     if FormatOutput == FORMAT_CSV:
-        import csv
+        DataArrayExported = df.to_csv(sep="\t" )
+
+    elif FormatOutput == FORMAT_XLS:
         import tempfile
 
-        # create teno file
-        fd, csv_file = tempfile.mkstemp(prefix="DataReadFromSql-", suffix=".csv")
+        fd, xls_file = tempfile.mkstemp(prefix="DataReadFromSql-", suffix=".xls")
 
-        # write header & rows
-        with open(csv_file, 'w', newline='\n') as f:
-            writer = csv.writer(f, delimiter='\t', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        df.to_excel(xls_file)
 
-            # write header
-            cursor = db.raw("SELECT * FROM `{}` LIMIT 1".format(TableName))
-            table_cols = [ coldesc[0] for coldesc in cursor.description ] # get column names
-            writer.writerow(table_cols)
-
-            # write rows
-            for row in datas:
-                writer.writerow(row)
-
-        # read content
-        with open(csv_file, 'rb') as f:
+        # use a context manager to open the file at that path and close it again
+        with open(xls_file, 'rb') as f:
             DataArrayExported = f.read()
 
         # close the file descriptor
         os.close(fd)
+
+        # remove temp file
+        if os.path.isfile(xls_file):
+            os.remove(xls_file)
+
+    elif FormatOutput == FORMAT_XLSX:
+        import tempfile
+
+        fd, xlsx_file = tempfile.mkstemp(prefix="DataReadFromSql-", suffix=".xlsx")
+
+        df.to_excel(xlsx_file)
+
+        # use a context manager to open the file at that path and close it again
+        with open(xlsx_file, 'rb') as f:
+            DataArrayExported = f.read()
+
+        # close the file descriptor
+        os.close(fd)
+
+        # remove temp file
+        if os.path.isfile(xlsx_file):
+            os.remove(xlsx_file)
+
+    elif FormatOutput == FORMAT_JSON:
+        DataArrayExported = df.to_json(orient='records')
+
+    elif FormatOutput == FORMAT_XML:
+        DataArrayExported = df.to_xml()
 
     else:
         raise Exception("unsupported")
@@ -90,6 +102,127 @@ def DataReadFromSql( DatabaseName, TableName, ExportLinesAfterPrimaryKey=None, F
     return DataArrayExported
 
 
+### helpers ###
+def to_xml(df, filename=None, mode='w'):
+    """ Save DataFrame to XML. If file == None return string.
+        :param df:
+        :param filename:
+        :param mode:
+        :return: ""
+        Note: XML format
+            <table>
+                <tr>
+                    <Col1>...</Col1> <Col2>...</Col2>
+                </tr>
+            </table>
+    """
+    def row_to_xml(row):
+        xml = ['<tr>']
+        for i, col_name in enumerate(row.index):
+            xml.append('  <{0}>{1}</{2}>'.format(col_name, row.iloc[i], col_name))
+        xml.append('</tr>')
+        return '\n'.join(xml)
+
+    # XML buffer
+    res = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    res += "<table>\n"
+    res += '\n'.join(df.apply(row_to_xml, axis=1))
+    res += "\n"
+    res += "</table>"
+
+    # if file not defined then return string
+    if filename is None:
+        return res
+
+    # save to file
+    with open(filename, mode, encoding="UTF-8") as f:
+        f.write(res)
+
+
+# add pandas.DataFrame method for save to XML
+pandas.DataFrame.to_xml = to_xml
+
+
 def GetFileData( filename ):
+    """ Read file into pandas.DataFrame
+        :param filename: ""
+        :return:         pandas.DataFrame
+    """
     # read data
-    return None
+    if filename.endswith('csv'):
+        df = pandas.read_csv(filename, sep=None, engine='python')
+
+    elif filename.endswith('xls'):
+        df = pandas.read_excel(filename)
+
+    elif filename.endswith('xlsx'):
+        df = pandas.read_excel(filename)
+
+    elif filename.endswith('json'):
+        df = pandas.read_json(filename, orient='records')
+
+    elif filename.endswith('xml'):
+        df = GetFileDataXML(filename)
+
+    else:
+        raise Exception("Unsuppported")
+
+    return df
+
+
+def GetFileDataXML(filename):
+    """ Read xml file with data
+        :param filename:    "" file name
+        :return:            pandas Dataframe
+    """
+    import xml.etree.ElementTree as ET
+    import pandas as pd
+
+    class XML2DataFrame:
+        def __init__(self, xml_data):
+            self.root = ET.XML(xml_data)
+
+        def parse_root(self, root):
+            return [self.parse_element(child) for child in iter(root)]
+
+        def parse_element(self, element, parsed=None):
+            if parsed is None:
+                parsed = dict()
+            for key in element.keys():
+                parsed[key] = element.attrib.get(key)
+            if element.text:
+                parsed[element.tag] = element.text
+            for child in list(element):
+                self.parse_element(child, parsed)
+            return parsed
+
+        def process_data(self):
+            structure_data = self.parse_root(self.root)
+            return pd.DataFrame(structure_data)
+
+    # read XMl to memory
+    with open(filename, encoding="UTF-8") as f:
+        xml_data = f.read()
+
+    # parse text to XML
+    xml2df = XML2DataFrame(xml_data)
+
+    # parse XMl to pandas.DataFrame
+    df = xml2df.process_data()
+
+    return df
+
+
+def get_db_connection(DatabaseName):
+    """ Return DB connection for insert data to SQLite/MySQL. default: sqlite
+        :param DatabaseName: ""
+        :return: SqlAlchemy connection object
+        See also: settings.DB_CONNECTION_STRING
+    """
+    from sqlalchemy import create_engine
+    from .. import settings
+
+    # connect
+    engine = create_engine(settings.DB_CONNECTION_STRING)
+    connection = engine.connect()
+    return connection
