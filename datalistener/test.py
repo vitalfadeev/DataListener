@@ -32,10 +32,13 @@ def create_test_table():
     db.UseDatabase(settings.BrainID)
 
     # create table
-    # use types from settings. add ID as primary key
+    # use types from settings.
     ctypes = settings.ColumnType
+    # add ID as primary key
     ctypes['ID'] = "PRIMARYKEYAUTO"
+    # to string
     stypes = [ "{}:{}".format(cname, ctype) for (cname, ctype) in settings.ColumnType.items() ]
+    # create table
     db.SqlCreateTable(settings.TABLENAME, stypes)
 
 
