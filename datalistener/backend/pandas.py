@@ -18,7 +18,7 @@ def DataStoreInSql( DatabaseName, TableName, ColumNames, DataArrayToWrite, Setti
     connection = get_db_connection( DatabaseName )
 
     # insert into DB. if table not exists - create, if exists - append
-    df.to_sql(TableName, connection, if_exists='replace', method='multi', index_label='ID')
+    df.to_sql(TableName, connection, if_exists='append', method='multi', index_label='ID')
 
     # last id
     result = connection.execute("SELECT max(id) FROM `{}`;".format(TableName))

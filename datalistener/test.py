@@ -17,10 +17,13 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def create_test_table():
+    """ Create test table.
+    See also: settings.py
+    """
     from datalistener import settings
     from sqlinterface import SQLInterface
 
-    db = SQLInterface(my_cnf_path=os.path.join(BASE_DIR, 'my.cnf'))
+    db = SQLInterface(settings.DB_CONNECTION_STRING)
     db.SqlDropDatabase(settings.BrainID)
     db.SqlCreateDatabase(settings.BrainID)
     db.UseDatabase(settings.BrainID)
