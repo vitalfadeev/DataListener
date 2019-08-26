@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def create_test_table():
-    """ Create test table.
+    """ Create test database. And test table.
     See also: settings.py
     """
     from datalistener import settings

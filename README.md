@@ -7,6 +7,7 @@ Flask app.
 - emission DB table data as csv
 - if not DB table exists: create
 - if DB table exists: append
+- auto create test database & test table 
 
 
 ## Install
