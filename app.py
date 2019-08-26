@@ -69,11 +69,11 @@ def store():
         if SameColumns:
             import pandas
             # insert into DB
-            DatabaseName     = settings.BrainID
-            TableName        = settings.TABLENAME
-            ColumNames       = SameColumns
-            data             = {c:[v] for c,v in request.args.items() }
-            DataArrayToWrite = pandas.DataFrame.from_dict( data )
+            DatabaseName     = settings.BrainID                                         # DB name
+            TableName        = settings.TABLENAME                                       # DB table name
+            ColumNames       = SameColumns                                              # column names
+            data             = [v for c,v in request.args.items() if c in SameColumns ] # one row
+            DataArrayToWrite = [data]                                                   # table of one row
 
             # main function for store data to DB
             lastid = DataStoreInSql(DatabaseName, TableName, ColumNames, DataArrayToWrite, SettingFormatDate=DMY)
@@ -86,7 +86,27 @@ def store():
     elif request.method == 'POST' and len(request.values) > 0:
         # HTTP POST sended
         format = 'HTTP-POST'
-        lastid = 0
+        # Check columns
+        dbcols = list(settings.ColumnType.keys())
+        dfcols = list(request.values)
+        SameColumns = GetSameColumns(dbcols, dfcols)
+
+        # if has same columns - OK
+        if SameColumns:
+            import pandas
+            # insert into DB
+            DatabaseName     = settings.BrainID                                         # DB name
+            TableName        = settings.TABLENAME                                       # DB table name
+            ColumNames       = SameColumns                                              # column names
+            data             = [v for c,v in request.values.items() if c in SameColumns ] # one row
+            DataArrayToWrite = [data]                                                   # table of one row
+
+            # main function for store data to DB
+            lastid = DataStoreInSql(DatabaseName, TableName, ColumNames, DataArrayToWrite, SettingFormatDate=DMY)
+
+        else:
+            # No same columns - [ warning ]
+            abort(400, "No same columns")
 
     elif request.method == 'PUT' and len(request.values) > 0:
         # HTTP PUT sended

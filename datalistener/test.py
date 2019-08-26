@@ -97,6 +97,32 @@ def test_store_http_get():
     r.close()
 
 
+def test_store_http_post():
+    """ Test upload csv
+    """
+    print("test_store_http_post() ", end="")
+
+    # make request
+    r = requests.post(
+        'http://localhost:5000/store',          # Flask url
+        auth=HTTPBasicAuth('admin', 'pwd123'),  # http basic auth username/password
+        data={                                  # HTTP GET URL params
+            'SomeNumbers5': 2
+        }
+    )
+
+    # check response
+    if r.status_code == 200:
+        print("[ OK ]")
+        print("  last id:", r.text)
+    else:
+        print("[FAIL]")
+        print("  code:", r.status_code)
+        print("  text:", r.text)
+
+    r.close()
+
+
 def test_read(format):
     """ Test download csv
     """
@@ -195,6 +221,14 @@ if __name__ == "__main__":
     test_store('xlsx')
     test_store('json')
     test_store('xml')
+
+    test_store_http_get()
+    test_store_http_get()
+    test_store_http_get()
+
+    test_store_http_post()
+    test_store_http_post()
+    test_store_http_post()
 
     test_read('csv')
     test_read('xls')
