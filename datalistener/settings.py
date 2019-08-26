@@ -19,20 +19,18 @@ DB_CONNECTION_STRING = 'sqlite:///{}'.format(sqlitedb)
 # allowed extensions. supported extension used in receive http form validation
 ALLOWED_EXTENSIONS  = {'json', 'csv', 'xls', 'xlsx', 'xml'}
 
-# DB table columns
-TABLE_COLS = ['ID:PRIMARYKEYAUTO', 'SomeNumbers5:FLOAT', 'OneDate:DATETIME', 'SomeTagSingle26:TEXT']
-
-ColumnsNameInput = ["SomeNumbers5" , "OneDate"]
-ColumnsNameOutput = ["SomeTagSingle26"]
-
+# DB table columns. 'ID' - PRIMARY KEY
 ColumnType = {
-    "SomeNumbers5"    : "NUMERIC",
-    "OneDate"         : "DATETIME",
-    "SomeTagSingle26" : "TAGS"
+    "SomeNumbers5"      : "NUMERIC",
+    "OneDate"           : "DATETIME",
+    "SomeTagSingle26"   : "TAGS",
 }
 
+ColumnsNameInput  = ["SomeNumbers5", "OneDate"]
+ColumnsNameOutput = ["SomeTagSingle26"]
+
 # available types
-types = [
+TYPES = [
     "NUMERICAL",
     "DATE",
     "DATETIME",

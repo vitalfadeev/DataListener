@@ -39,15 +39,62 @@ def store():
             'file'      b""   supported formats: csv, xls, xlsx, json, xml
         :return: ""  Last id
     """
-    # save file from HTTP data to local storage
-    file = request.files['file']    # get file data
-    filename = files.save(file)     # save file data
+    lastid = None
 
-    # get full file name. ex: /full/path/to/file
-    ffname = os.path.join(settings.UPLOAD_FOLDER, filename)
+    # detect format
+    if request.files.get('file', None):
+        # File sended
+        format = 'FILE'
 
-    # parse file & insert into DB. get last inserted ID
-    lastid = ProcessFile( ffname )
+        # save file from HTTP data to local storage
+        file = request.files['file']    # get file data
+        filename = files.save(file)     # save file data
+
+        # get full file name. ex: /full/path/to/file
+        ffname = os.path.join(settings.UPLOAD_FOLDER, filename)
+
+        # parse file & insert into DB. get last inserted ID
+        lastid = ProcessFile( ffname )
+
+    elif request.method == 'GET' and len(request.args) > 0:
+        # HTTP GET | PUT sended
+        format = 'HTTP-GET'
+
+        # Check columns
+        dbcols = list(settings.ColumnType.keys())
+        dfcols = list(request.args)
+        SameColumns = GetSameColumns(dbcols, dfcols)
+
+        # if has same columns - OK
+        if SameColumns:
+            import pandas
+            # insert into DB
+            DatabaseName     = settings.BrainID
+            TableName        = settings.TABLENAME
+            ColumNames       = SameColumns
+            data             = {c:[v] for c,v in request.args.items() }
+            DataArrayToWrite = pandas.DataFrame.from_dict( data )
+
+            # main function for store data to DB
+            lastid = DataStoreInSql(DatabaseName, TableName, ColumNames, DataArrayToWrite, SettingFormatDate=DMY)
+
+        else:
+            # No same columns - [ warning ]
+            abort(400, "No same columns")
+
+
+    elif request.method == 'POST' and len(request.values) > 0:
+        # HTTP POST sended
+        format = 'HTTP-POST'
+        lastid = 0
+
+    elif request.method == 'PUT' and len(request.values) > 0:
+        # HTTP PUT sended
+        format = 'HTTP-PUT'
+        lastid = 0
+
+    else:
+        abort(400, "Unsupported")
 
     # return last inserted ID
     return Response(repr(lastid))

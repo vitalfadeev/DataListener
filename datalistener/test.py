@@ -20,19 +20,48 @@ def test_store(format):
     """ Test upload csv
     """
     print("test_store({}) ".format(format), end="")
+
+    # make request
     r = requests.post(
-        'http://localhost:5000/store',
-        auth=HTTPBasicAuth('admin', 'pwd123'),
-        files={
+        'http://localhost:5000/store',          # Flask url
+        auth=HTTPBasicAuth('admin', 'pwd123'),  # http basic auth username/password
+        files={                                 # file to upload
             'file': open(os.path.join(
                 BASE_DIR, 'tests', 'test-2.{}'.format(format)),
                 'rb'
             )
         })
 
+    # check response
+    if r.status_code == 200:                    # 200 - OK
+        print("[ OK ]")
+        print("  last id:", r.text)
+    else:
+        print("[FAIL]")
+        print("  code:", r.status_code)
+        print("  text:", r.text)
+
+    r.close()
+
+
+def test_store_http_get():
+    """ Test upload csv
+    """
+    print("test_store_http_get() ", end="")
+
+    # make request
+    r = requests.get(
+        'http://localhost:5000/store',          # Flask url
+        auth=HTTPBasicAuth('admin', 'pwd123'),  # http basic auth username/password
+        params={                                # HTTP GET URL params
+            'SomeNumbers5': 1
+        }
+    )
+
+    # check response
     if r.status_code == 200:
         print("[ OK ]")
-        print("  text:", r.text)
+        print("  last id:", r.text)
     else:
         print("[FAIL]")
         print("  code:", r.status_code)
@@ -45,15 +74,18 @@ def test_read(format):
     """ Test download csv
     """
     print("test_read({}): ".format(format), end="")
+
+    # make request
     r = requests.get(
-        'http://localhost:5000/read',
-        auth=HTTPBasicAuth('admin', 'pwd123'),
+        'http://localhost:5000/read',           # Flask url
+        auth=HTTPBasicAuth('admin', 'pwd123'),  # http basic username/password
         params = {
             'format'  : format,
         },
         stream=True)
 
-    if r.status_code == 200:
+    # check response
+    if r.status_code == 200:                    # 200 - OK
         print("[ OK ]")
         write_file(r)
 

@@ -24,7 +24,7 @@ def DataStoreInSql( DatabaseName, TableName, ColumNames, DataArrayToWrite ):
     db.SqlDropDatabase(DatabaseName)
     db.SqlCreateDatabase(DatabaseName)
     db.UseDatabase(DatabaseName)
-    db.SqlCreateTable(TableName, settings.TABLE_COLS)
+    db.SqlCreateTable(TableName, settings.ColumnType)
 
     # insert
     c = db.SqlExecuteManyInsert(TableName, ColumNames, DataArrayToWrite)

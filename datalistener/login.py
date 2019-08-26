@@ -5,6 +5,8 @@ from datalistener import settings
 # decorator for check login/password
 def login_required(func):
     """ Decorator for check user/password
+        This version can be used as replace HTTP Basic Auth.
+        For auth via HTTP URL params: ?username=test&password=test
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
