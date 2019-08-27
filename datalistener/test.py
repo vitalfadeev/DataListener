@@ -31,16 +31,20 @@ def create_test_table():
     db.SqlCreateDatabase(settings.BrainID)
     db.UseDatabase(settings.BrainID)
 
-    # create table
+    # create table INPUT
     # use types from settings.
     ctypes = settings.ColumnType
     # add ID as primary key
     ctypes['ID'] = "PRIMARYKEYAUTO"
-    # to string
-    stypes = [ "{}:{}".format(cname, ctype) for (cname, ctype) in settings.ColumnType.items() ]
+    # add predefined columns
+    ctypes['IsForLearning']       = "INT"
+    ctypes['IsForSolving']        = "INT"
+    ctypes['IsWithMissingValues'] = "INT"
+    ctypes['IsForEvaluation']     = "INT"
+    ctypes['IsLearned']           = "INT"
+    ctypes['IsSolved']            = "INT"
     # create table
-    db.SqlCreateTable(settings.TABLENAME, stypes)
-
+    db.SqlCreateTable(settings.TABLENAME, ctypes)
 
 
 def test_store(format):
