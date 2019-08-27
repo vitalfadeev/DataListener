@@ -21,7 +21,7 @@ def DataStoreInSql( DatabaseName, TableName, ColumNames, DataArrayToWrite, Setti
     from sqlinterface import SQLInterface
     from datalistener import settings
     db = SQLInterface(connection_string=settings.DB_CONNECTION_STRING)
-    db.SqlExecuteManyInsert(TableName, ColumNames, DataArrayToWrite.values.tolist())
+    db.SqlExecuteManyInsert(TableName, ColumNames, df.values.tolist())
 
     # last id
     result = connection.execute("SELECT max(id) FROM `{}`;".format(TableName))

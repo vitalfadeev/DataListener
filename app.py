@@ -54,9 +54,6 @@ def store():
         # parse file & insert into DB. get last inserted ID
         lastid = ProcessFile( ffname )
 
-        # post insert service script
-        PostInsert(lastid)
-
 
     elif request.method == 'GET' and len(request.args) > 0:
         # HTTP GET | PUT sended
@@ -81,7 +78,7 @@ def store():
             lastid = DataStoreInSql(DatabaseName, TableName, ColumNames, DataArrayToWrite, SettingFormatDate=DMY)
 
             # post insert service script
-            PostInsert(lastid)
+            PostInsert(1, lastid)
 
         else:
             # No same columns - [ warning ]
@@ -110,7 +107,7 @@ def store():
             lastid = DataStoreInSql(DatabaseName, TableName, ColumNames, DataArrayToWrite, SettingFormatDate=DMY)
 
             # post insert service script
-            PostInsert(lastid)
+            PostInsert(1, lastid)
 
         else:
             # No same columns - [ warning ]
@@ -203,6 +200,9 @@ def ProcessFile(ffname, SettingFormatDate=DMY):
         # main function for store data to DB
         lastid = DataStoreInSql(DatabaseName, TableName, ColumNames, DataArrayToWrite, SettingFormatDate=DMY)
 
+        # post insert service script
+        PostInsert(df.shape[0], lastid)
+
         return lastid
 
     else:
@@ -240,14 +240,16 @@ def GetSameColumns(db_cols, file_cols):
     return list(common)
 
 
-def PostInsert(lastid):
+def PostInsert(rows_count, lastid):
     """ Post Insert service script.
         Update predefined columns: 'IsForLearning' and other
+        :param rows_count int  Row in data packet
+        :param lastid     int  Last inserted ID
     """
-    DatabaseName = settings.BrainID    # DB name
-    TableName    = settings.TABLENAME  # DB table name
-    cols_in      = settings.ColumnsNameInput
-    cols_out     = settings.ColumnsNameOutput
+    DatabaseName = settings.BrainID             # DB name
+    TableName    = settings.TABLENAME           # DB table name
+    cols_in      = settings.ColumnsNameInput    # input columns
+    cols_out     = settings.ColumnsNameOutput   # output columns
 
     # get DB connection
     dbc = get_db_connection(DatabaseName)
@@ -309,7 +311,11 @@ def PostInsert(lastid):
     # After all lines stored, it is possible to execute a sql command to update IsForEvluation=1  on 10% lines (Max 100 lines) where  IsForLearning=1
     conds = []
     # get chunk id
-    chunk_id = lastid - 100
+    chunk_size = int(rows_count / 10)  # 10%
+    if chunk_size > 100:
+        chunk_size = 100
+
+    chunk_id = lastid - chunk_size
     if chunk_id < 0:
         chunk_id = 0
 
