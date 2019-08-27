@@ -59,7 +59,7 @@ def store():
         format = 'HTTP-GET'
 
         # Check columns
-        dbcols = list(settings.ColumnType.keys())
+        dbcols = settings.ColumnsNameInput + settings.ColumnsNameOutput
         dfcols = list(request.args)
         SameColumns = GetSameColumns(dbcols, dfcols)
 
@@ -85,7 +85,7 @@ def store():
         # HTTP POST sended
         format = 'HTTP-POST'
         # Check columns
-        dbcols = list(settings.ColumnType.keys())
+        dbcols = settings.ColumnsNameInput + settings.ColumnsNameOutput
         dfcols = list(request.values)
         SameColumns = GetSameColumns(dbcols, dfcols)
 
@@ -177,7 +177,7 @@ def ProcessFile(ffname, SettingFormatDate=DMY):
     # 1. get table columns
     # 2. get file columns
     # 3. find same
-    dbcols = list(settings.ColumnType.keys())
+    dbcols = settings.ColumnsNameInput + settings.ColumnsNameOutput
     dfcols = list(df.columns)
     SameColumns = GetSameColumns(dbcols, dfcols)
 
