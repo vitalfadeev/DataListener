@@ -146,19 +146,19 @@ def GetFileData( filename ):
         :return:         pandas.DataFrame
     """
     # read data
-    if filename.endswith('csv'):
-        df = pandas.read_csv(filename, sep=None, engine='python')
+    if filename.lower().endswith('csv'):
+        df = pandas.read_csv(filename, sep=None, engine='python') # python engine has autodetection
 
-    elif filename.endswith('xls'):
+    elif filename.lower().endswith('xls'):
         df = pandas.read_excel(filename)
 
-    elif filename.endswith('xlsx'):
+    elif filename.lower().endswith('xlsx'):
         df = pandas.read_excel(filename)
 
-    elif filename.endswith('json'):
+    elif filename.lower().endswith('json'):
         df = pandas.read_json(filename, orient='records')
 
-    elif filename.endswith('xml'):
+    elif filename.lower().endswith('xml'):
         df = GetFileDataXML(filename)
 
     else:
