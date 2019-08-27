@@ -3,7 +3,7 @@ from flask import Flask, flash, request, redirect, url_for, render_template, Res
 from flask_uploads import UploadSet, configure_uploads, IMAGES, patch_request_class
 from flask_basicauth import BasicAuth
 from datalistener import settings
-from datalistener import DataReadFromSql, DataStoreInSql, GetFileData
+from datalistener import DataReadFromSql, DataStoreInSql, GetFileData, get_db_connection
 from datalistener import FORMAT_CSV, FORMAT_XLS, FORMAT_XLSX, FORMAT_JSON, FORMAT_XML, DMY, MDY
 
 
@@ -54,6 +54,10 @@ def store():
         # parse file & insert into DB. get last inserted ID
         lastid = ProcessFile( ffname )
 
+        # post insert service script
+        PostInsert(lastid)
+
+
     elif request.method == 'GET' and len(request.args) > 0:
         # HTTP GET | PUT sended
         format = 'HTTP-GET'
@@ -75,6 +79,9 @@ def store():
 
             # main function for store data to DB
             lastid = DataStoreInSql(DatabaseName, TableName, ColumNames, DataArrayToWrite, SettingFormatDate=DMY)
+
+            # post insert service script
+            PostInsert(lastid)
 
         else:
             # No same columns - [ warning ]
@@ -101,6 +108,9 @@ def store():
 
             # main function for store data to DB
             lastid = DataStoreInSql(DatabaseName, TableName, ColumNames, DataArrayToWrite, SettingFormatDate=DMY)
+
+            # post insert service script
+            PostInsert(lastid)
 
         else:
             # No same columns - [ warning ]
@@ -185,9 +195,6 @@ def ProcessFile(ffname, SettingFormatDate=DMY):
         # reduce data size: keep only required columns
         DataArrayToWrite = df[SameColumns]
 
-        # remove NaN from data
-        DataArrayToWrite = DataArrayToWrite.dropna()
-
         # insert into DB
         DatabaseName     = settings.BrainID
         TableName        = settings.TABLENAME
@@ -232,3 +239,87 @@ def GetSameColumns(db_cols, file_cols):
     common = set(db_cols) & set(file_cols)
     return list(common)
 
+
+def PostInsert(lastid):
+    """ Post Insert service script.
+        Update predefined columns: 'IsForLearning' and other
+    """
+    DatabaseName = settings.BrainID    # DB name
+    TableName    = settings.TABLENAME  # DB table name
+    cols_in      = settings.ColumnsNameInput
+    cols_out     = settings.ColumnsNameOutput
+
+    # get DB connection
+    dbc = get_db_connection(DatabaseName)
+
+    # After all lines stored, it is possible to execute a sql command to update IsForLearning=1 for all lines with no values empty in all (columnsInput+columnsOutPut)
+    # make SQL condition: LENGTH(Col1) > 0 AND Col1 IS NOT NULL ...
+    conds = []
+    for col in cols_in + cols_out:
+        conds.append( "LENGTH(`{}`) > 0 AND `{}` IS NOT NULL".format(col, col) )
+    cond = " AND ".join( conds )
+
+    # execute sql
+    dbc.execute("""
+        UPDATE `{}` 
+           SET IsForLearning = 1 
+         WHERE {}"""
+        .format(
+            TableName,
+            cond
+        )
+    )
+
+    # After all lines stored, it is possible to execute a sql command to update IsForSolving=1 for all lines with all values in (columnsInput) and none or some values in columnsOutPut
+    # make SQL condition: LENGTH(Col1) > 0 AND Col1 IS NOT NULL ...
+    conds = []
+    for col in cols_in:
+        conds.append( "LENGTH(`{}`) > 0 AND `{}` IS NOT NULL".format(col, col) )
+    cond = " AND ".join( conds )
+
+    # execute sql
+    dbc.execute("""
+        UPDATE `{}` 
+           SET IsForSolving = 1 
+         WHERE {}"""
+        .format(
+            TableName,
+            cond
+        )
+    )
+
+    # After all lines stored, it is possible to execute a sql command to update IsWithMissingValues=1 for all lines with some values missing in columnsInput
+    conds = []
+    for col in cols_in:
+        conds.append( "( LENGTH(`{}`) = 0 OR `{}` IS NULL )".format(col, col) )
+    cond = " AND ".join( conds )
+
+    # execute sql
+    dbc.execute("""
+        UPDATE `{}` 
+           SET IsWithMissingValues = 1 
+         WHERE {}"""
+        .format(
+            TableName,
+            cond
+        )
+    )
+
+
+    # After all lines stored, it is possible to execute a sql command to update IsForEvluation=1  on 10% lines (Max 100 lines) where  IsForLearning=1
+    conds = []
+    # get chunk id
+    chunk_id = lastid - 100
+    if chunk_id < 0:
+        chunk_id = 0
+
+    # execute sql
+    dbc.execute("""
+        UPDATE `{}` 
+           SET IsForEvaluation = 1 
+         WHERE IsForLearning = 1 AND ID > {}"""
+        .format(
+            TableName,
+            chunk_id
+        )
+    )

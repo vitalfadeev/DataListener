@@ -25,6 +25,7 @@ def DataStoreInSql( DatabaseName, TableName, ColumNames, DataArrayToWrite, Setti
     row = result.fetchone()
     LastPrimaryKeyWritten = row[0]
 
+    # close
     connection.close()
 
     return LastPrimaryKeyWritten
