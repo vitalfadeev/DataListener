@@ -2,11 +2,11 @@
 # http://localhost:5000/store
 
 # receive
-# http://localhost:5000/read?databasename=format=csv
-# http://localhost:5000/read?databasename=format=xls
-# http://localhost:5000/read?databasename=format=json
-# http://localhost:5000/read?databasename=format=xml
-# http://localhost:5000/read?databasename=format=csv&from_id=10
+# http://localhost:5000/read?format=csv
+# http://localhost:5000/read?format=xls
+# http://localhost:5000/read?format=json
+# http://localhost:5000/read?format=xml
+# http://localhost:5000/read?format=csv&from_id=10
 
 import os
 import requests
