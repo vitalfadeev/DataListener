@@ -1,3 +1,3 @@
-CREATE USER 'testuser'@'localhost' IDENTIFIED BY 'testpassword';
-GRANT ALL PRIVILEGES ON * . * TO 'testuser'@'localhost';
+CREATE USER 'ixioo'@'localhost' IDENTIFIED BY '777';
+GRANT ALL PRIVILEGES ON *.* TO 'ixioo'@'localhost';
 FLUSH PRIVILEGES;

@@ -11,7 +11,7 @@ UPLOAD_FOLDER       = os.path.join(BASE_DIR, 'uploads')
 
 # DB connection string in SQLAlchemy format
 # for MySQL
-DB_CONNECTION_STRING = 'mysql://testuser:testpassword@localhost/{}?charset=utf8'.format(BrainID)
+DB_CONNECTION_STRING = 'mysql://ixioo:777@localhost/{}?charset=utf8'.format(BrainID)
 
 # allowed extensions. supported extension used in receive http form validation
 ALLOWED_EXTENSIONS  = {'json', 'csv', 'xls', 'xlsx', 'xml'}
